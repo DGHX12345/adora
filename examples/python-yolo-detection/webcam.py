@@ -7,7 +7,6 @@ frames the node releases and re-opens the device automatically.
 import os
 
 import cv2
-import numpy as np
 import pyarrow as pa
 from adora import Node
 
@@ -43,7 +42,15 @@ def main():
                 failure_count += 1
                 continue
 
-            node.send_output("image", pa.array(frame.ravel()), event["metadata"])
+            node.send_output(
+                "image",
+                pa.array(frame.ravel()),
+                metadata={
+                    "width": CAMERA_WIDTH,
+                    "height": CAMERA_HEIGHT,
+                    "encoding": "bgr8",
+                },
+            )
 
         elif event["type"] == "STOP":
             break

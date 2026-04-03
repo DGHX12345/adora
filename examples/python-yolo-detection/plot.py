@@ -26,7 +26,10 @@ def main():
             value = event["value"]
 
             if event_id == "image":
-                image = value.to_numpy().reshape((CAMERA_HEIGHT, CAMERA_WIDTH, 3)).copy()
+                meta = event["metadata"]
+                w = meta.get("width", CAMERA_WIDTH)
+                h = meta.get("height", CAMERA_HEIGHT)
+                image = value.to_numpy().reshape((h, w, 3)).copy()
 
                 for bbox in bboxs:
                     [min_x, min_y, max_x, max_y, confidence, label] = bbox
@@ -50,7 +53,8 @@ def main():
                     break
 
             elif event_id == "bbox":
-                bboxs = value.to_numpy().reshape((-1, 6))
+                arr = value.to_numpy()
+                bboxs = arr.reshape((-1, 6)) if arr.size > 0 else []
 
         elif event["type"] == "STOP":
             break

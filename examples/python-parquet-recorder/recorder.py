@@ -15,17 +15,6 @@ from adora import Node
 LOG_DIR = os.getenv("LOG_DIR", "logs")
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", 30))
 
-os.makedirs(LOG_DIR, exist_ok=True)
-
-node = Node()
-
-# Signal readiness so the camera node can start streaming
-node.send_output("status", pa.array(["ready"]))
-print(f"Recorder ready. batch_size={BATCH_SIZE}, log_dir={LOG_DIR}", flush=True)
-
-batch = []
-file_index = 0
-
 
 def flush_batch(batch, file_index):
     """Write accumulated frames to a Parquet file and return the next file index."""
@@ -38,26 +27,41 @@ def flush_batch(batch, file_index):
     return file_index + 1
 
 
-for event in node:
-    if event["type"] == "INPUT" and event["id"] == "image":
-        metadata = event["metadata"]
-        frame_data = event["value"].to_numpy().tobytes()
-        batch.append(
-            {
-                "timestamp_ns": time.perf_counter_ns(),
-                "frame_id": metadata.get("frame_id", len(batch)),
-                "width": metadata.get("width", 640),
-                "height": metadata.get("height", 480),
-                "encoding": metadata.get("encoding", "bgr8"),
-                "data": frame_data,
-            }
-        )
-        if len(batch) >= BATCH_SIZE:
-            file_index = flush_batch(batch, file_index)
-            batch = []
-    elif event["type"] == "STOP":
-        break
+def main():
+    os.makedirs(LOG_DIR, exist_ok=True)
+    node = Node()
 
-# Flush any remaining frames before exit
-flush_batch(batch, file_index)
-print("Recorder finished.", flush=True)
+    # Signal readiness so the camera node can start streaming
+    node.send_output("status", pa.array(["ready"]))
+    print(f"Recorder ready. batch_size={BATCH_SIZE}, log_dir={LOG_DIR}", flush=True)
+
+    batch = []
+    file_index = 0
+
+    for event in node:
+        if event["type"] == "INPUT" and event["id"] == "image":
+            metadata = event["metadata"]
+            frame_data = event["value"].to_numpy().tobytes()
+            batch.append(
+                {
+                    "timestamp_ns": time.perf_counter_ns(),
+                    "frame_id": metadata.get("frame_id", len(batch)),
+                    "width": metadata.get("width", 640),
+                    "height": metadata.get("height", 480),
+                    "encoding": metadata.get("encoding", "bgr8"),
+                    "data": frame_data,
+                }
+            )
+            if len(batch) >= BATCH_SIZE:
+                file_index = flush_batch(batch, file_index)
+                batch = []
+        elif event["type"] == "STOP":
+            break
+
+    # Flush any remaining frames before exit
+    flush_batch(batch, file_index)
+    print("Recorder finished.", flush=True)
+
+
+if __name__ == "__main__":
+    main()

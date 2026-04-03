@@ -22,13 +22,15 @@ def main():
     for event in node:
         if event["type"] == "INPUT":
             raw = event["value"].to_numpy()
+            meta = event["metadata"]
+            w = meta.get("width", CAMERA_WIDTH)
+            h = meta.get("height", CAMERA_HEIGHT)
 
             # Guard against partial frames that would cause a reshape error
-            expected = CAMERA_HEIGHT * CAMERA_WIDTH * 3
-            if raw.size != expected:
+            if raw.size != h * w * 3:
                 continue
 
-            frame = raw.reshape((CAMERA_HEIGHT, CAMERA_WIDTH, 3))
+            frame = raw.reshape((h, w, 3))
             frame = frame[:, :, ::-1]  # BGR to RGB
 
             results = model(frame, verbose=False, device="cpu")
