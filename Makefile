@@ -56,5 +56,5 @@ qa-semver:
 # One-shot tool installation
 
 qa-install:
-	cargo install cargo-audit cargo-deny cargo-llvm-cov cargo-mutants cargo-semver-checks
+	cargo install cargo-audit cargo-deny cargo-llvm-cov cargo-mutants cargo-semver-checks ripgrep
 	rustup component add llvm-tools-preview
