@@ -58,6 +58,11 @@ qa-adversarial:
 	@scripts/qa/adversarial.sh
 
 # One-shot tool installation
+# Note: ripgrep (rg) is also required by scripts/qa/unwrap-budget.sh.
+# Install it via your system package manager:
+#   macOS:  brew install ripgrep
+#   Ubuntu: apt-get install ripgrep
+#   Others: https://github.com/BurntSushi/ripgrep#installation
 
 qa-install:
 	cargo install cargo-audit cargo-deny cargo-llvm-cov cargo-mutants cargo-semver-checks
